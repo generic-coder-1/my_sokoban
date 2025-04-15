@@ -4,6 +4,7 @@ use ratatui::{
     buffer::Buffer,
     crossterm::event::{KeyCode, KeyEvent},
     layout::{Constraint, Layout, Margin, Rect},
+    text::{Text, ToLine},
     widgets::{Block, StatefulWidget, Widget, WidgetRef},
 };
 use ron::ser::PrettyConfig;
@@ -74,32 +75,34 @@ impl Menu for EditMenu {
                 self.cursor.1 = self.cursor.1.add(1).min(self.buffer.height() - 1)
             }
             KeyCode::Down => {
+                let mut last_tool = self.current_tool.pop().unwrap();
                 if let Some(MenuValue::Nested(layer)) =
                     MenuLayer::STARTLAYER.get_value(&self.current_tool)
                 {
-                    let mut last_tool = self.current_tool.pop().unwrap();
-                    last_tool +=1;
+                    last_tool += 1;
                     last_tool %= layer.sub_menu.len();
                     self.current_tool.push(last_tool);
                 }
             }
             KeyCode::Up => {
+                let mut last_tool: usize = self.current_tool.pop().unwrap();
                 if let Some(MenuValue::Nested(layer)) =
                     MenuLayer::STARTLAYER.get_value(&self.current_tool)
                 {
-                    let mut last_tool:isize = self.current_tool.pop().unwrap() as isize;
-                    last_tool -=1;
-                    last_tool %= layer.sub_menu.len() as isize;
-                    self.current_tool.push(last_tool as usize);
+                    last_tool += layer.sub_menu.len() - 1;
+                    last_tool %= layer.sub_menu.len();
+                    self.current_tool.push(last_tool);
                 }
             }
-            KeyCode::Right => {
-                if let Some(MenuValue::Nested(_))= MenuLayer::STARTLAYER.get_value(&self.current_tool){
+            KeyCode::Left => {
+                if let Some(MenuValue::Nested(_)) =
+                    MenuLayer::STARTLAYER.get_value(&self.current_tool)
+                {
                     self.current_tool.push(0);
                 }
             }
-            KeyCode::Left =>{
-                if self.current_tool.len()>2{
+            KeyCode::Right => {
+                if self.current_tool.len() > 1 {
                     self.current_tool.pop();
                 }
             }

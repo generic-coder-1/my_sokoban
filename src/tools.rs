@@ -7,6 +7,7 @@ use ratatui::{
 
 use crate::tiles::Tile;
 
+#[derive(Debug)]
 pub enum Tool {
     Tile(Tile),
     AreaTool(AreaTool),
@@ -20,11 +21,13 @@ pub enum AreaTool {
     Fill,
 }
 
+#[derive(Debug)]
 pub enum MenuValue {
     Terminal(Tool),
     Nested(MenuLayer),
 }
 
+#[derive(Debug)]
 pub struct MenuLayer {
     name: &'static str,
     pub sub_menu: &'static [MenuValue],
@@ -53,19 +56,6 @@ impl MenuLayer {
             MenuValue::Terminal(Tool::Save),
         ],
     });
-
-    pub fn get_value(&self, position: &Vec<usize>) -> Option<&MenuValue> {
-        position
-            .iter()
-            .skip(1)
-            .try_fold(
-                self.sub_menu.get(*position.first()?)?,
-                |val, pos| match val {
-                    MenuValue::Terminal(_) => Some(val),
-                    MenuValue::Nested(layer) => layer.sub_menu.get(*pos),
-                },
-            )
-    }
 }
 
 impl MenuValue {
@@ -77,16 +67,10 @@ impl MenuValue {
     }
 
     pub fn get_value(&self, position: &Vec<usize>) -> Option<&MenuValue> {
-        position
-            .iter()
-            .skip(1)
-            .try_fold(
-                self,
-                |val, pos| match val {
-                    MenuValue::Terminal(_) => Some(val),
-                    MenuValue::Nested(layer) => layer.sub_menu.get(*pos),
-                },
-            )
+        position.iter().try_fold(self, |val, pos| match val {
+            MenuValue::Terminal(_) => Some(val),
+            MenuValue::Nested(layer) => layer.sub_menu.get(*pos),
+        })
     }
 }
 
